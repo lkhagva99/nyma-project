@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, ChangeEvent } from 'react';
 import AuthGuard from "./components/AuthGuard";
 import TextInput from "./components/TextInput";
 
@@ -11,20 +11,24 @@ export default function Home() {
   })
   const [isLoading, setIsLoading] = useState(false)
 
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
   return (
     <AuthGuard>
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <div className='grid justify-items-center gap-y-4 shadow-xl bg-white p-8 rounded-xl'>
-          <div className='text-black'>
-            Main Form
+    <div className="font-sans grid grid-rows-[auto_1fr_auto] items-center justify-items-center min-h-screen p-6 sm:p-10 bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      <header className="row-start-1 w-full max-w-3xl flex items-center justify-between">
+        <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900">Dashboard</h1>
+        <span className="text-sm text-slate-500">v1.0</span>
+      </header>
+      <main className="row-start-2 w-full max-w-3xl">
+        <div className='grid gap-6 rounded-2xl border border-slate-200 bg-white/80 backdrop-blur-sm p-6 sm:p-8 shadow-[0_6px_30px_rgba(0,0,0,0.06)]'>
+          <div>
+            <h2 className='text-lg sm:text-xl font-medium text-slate-900'>Main configuration</h2>
+            <p className='mt-1 text-sm text-slate-500'>Set up your cluster details to get started.</p>
           </div>
-          <div className='grid gap-y-2'>
+          <div className='grid gap-y-3'>
             <TextInput 
               label="Cluster name"
               name="input1"
@@ -44,32 +48,40 @@ export default function Home() {
               required
             />
           </div>
-          <button 
-            type="submit"
-            disabled={isLoading}
-            className={`
-              mt-8 w-full py-3 px-4 rounded-lg font-medium transition-colors
-              ${isLoading 
-                ? 'bg-gray-400 cursor-not-allowed' 
-                : 'bg-primary hover:bg-secondary text-white hover:shadow-lg'
-              }
-              focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2
-            `}
-          >
-            
-            {isLoading ? (
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+          <div className="pt-2">
+            <button 
+              type="submit"
+              disabled={isLoading}
+              className={`
+                inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 font-medium transition-all
+                ${isLoading 
+                  ? 'bg-gray-300 text-gray-600 cursor-not-allowed' 
+                  : 'bg-primary text-white hover:bg-secondary hover:shadow-lg active:scale-[0.99]'
+                }
+                focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-white
+              `}
+              aria-live="polite"
+            >
+              {isLoading ? (
+                <>
+                  <span className="relative inline-flex h-5 w-5">
+                    <span className="animate-spin h-5 w-5 rounded-full border-2 border-white/60 border-t-transparent"></span>
+                  </span>
                   Saving config...
-                </div>
+                </>
               ) : (
                 'Save config'
               )}
-          </button>
+            </button>
+          </div>
         </div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        Footer
+      <footer className="row-start-3 w-full max-w-3xl mt-8 flex items-center justify-between text-xs text-slate-500">
+        <span>© {new Date().getFullYear()} Nyma</span>
+        <div className="flex items-center gap-4">
+          <a className="hover:text-slate-700 transition-colors" href="#">Docs</a>
+          <a className="hover:text-slate-700 transition-colors" href="#">Support</a>
+        </div>
       </footer>
     </div>
     </AuthGuard>
