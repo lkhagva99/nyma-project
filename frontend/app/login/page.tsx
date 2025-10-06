@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import TextInput from '../components/TextInput'
 import axios from 'axios'
+import { setAuthTokenCookie } from '../../utils/auth'
 
 interface FormData {
   email: string
@@ -65,19 +66,20 @@ export default function Login() {
     setErrors({})
 
     try {
-      const response = await axios.post('/api/auth/login', formData, {
+      const response = await axios.post('http://localhost:3001/auth/login', formData, {
         headers: {
           "Accept": 'application/json'
         }
       })
       const {data} = response
       if (response.status == 200) {
-        // Store token in localStorage
-        localStorage.setItem('token', data.token)
+        // Set cookie on frontend; do not use localStorage
+        setAuthTokenCookie(data.token)
+
         // Redirect to home page
         router.push('/')
       } else {
-        setErrors({ general: data.error || 'Login failed' })
+        setErrors({ general: data.message || 'Login failed' })
       }
     } catch (error) {
       setErrors({ general: 'Network error. Please try again.' })

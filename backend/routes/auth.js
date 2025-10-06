@@ -39,4 +39,11 @@ export default async function authRoutes(fastify, options) {
 
     reply.send({ token })
   })
+
+  // Verify token - returns current user basic info if valid
+  fastify.get('/verify', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    // request.user is populated by jwtVerify()
+    const { id, email } = request.user
+    return reply.send({ ok: true, user: { id, email } })
+  })
 }

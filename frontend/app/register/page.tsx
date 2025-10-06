@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import TextInput from '../components/TextInput'
+import axios from 'axios'
 
 interface FormData {
   email: string
@@ -74,25 +75,14 @@ export default function Register() {
     setErrors({})
 
     try {
-      const response = await fetch('http://localhost:3001/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password
-        }),
-      })
+      const response = await axios.post('http://localhost:3001/auth/register', formData)
+      const {data} = response
 
-      const data = await response.json()
-
-      if (response.ok) {
+      if (response.status==200) {
         // Redirect to login page after successful registration
         router.push('/login')
       } else {
-        setErrors({ general: data.error || 'Registration failed' })
+        setErrors({ general: data.message || 'Registration failed' })
       }
     } catch (error) {
       setErrors({ general: 'Network error. Please try again.' })
