@@ -25,14 +25,12 @@ export function clearAuthTokenCookie() {
 
 export async function isTokenValid(): Promise<boolean> {
   const token = getAuthTokenCookie();
-  console.log(token);
   if (!token) return false;
   try {
     const res = await axios.get("http://localhost:3001/auth/verify", {
       headers: { Authorization: `Bearer ${token}` },
       validateStatus: () => true,
     });
-    console.log(res);
     return res.status === 200 && Boolean(res.data?.ok);
   } catch {
     return false;
