@@ -1,6 +1,7 @@
 import Fastify from 'fastify'
 import jwt from '@fastify/jwt'
-import mongo from './plugins/mongo.js'
+// import mongo from './plugins/mongo.js'
+import { fpSqlitePlugin } from "fastify-sqlite-typed"
 import dotenv from 'dotenv'
 import authRoutes from './routes/auth.js'
 import cors from '@fastify/cors'
@@ -9,8 +10,10 @@ dotenv.config()
 const fastify = Fastify({ logger: false })
 
 await fastify.register(cors);
-// Register MongoDB
-fastify.register(mongo)
+// Register SQLite
+fastify.register(fpSqlitePlugin, {
+  dbFilename: "./sqlite.db",
+});
 
 // Register JWT
 fastify.register(jwt, {
