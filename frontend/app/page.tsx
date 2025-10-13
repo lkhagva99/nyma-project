@@ -1,20 +1,60 @@
 'use client'
 
-import { useState, ChangeEvent } from 'react';
+import { useState, ChangeEvent, useEffect } from 'react';
 import AuthGuard from "./components/AuthGuard";
 import TextInput from "./components/TextInput";
+import axios from 'axios';
+import SelectInput from './components/SelectInput';
 
 export default function Home() {
-  const [formData, setFormData] = useState({
-    input1: '',
-    input2: ''
-  })
+  type FormData = {
+    olt_option?: string;
+    branch?: string;
+    [key: string]: any;
+  };
+  const [formData, setFormData] = useState<FormData>({});
   const [isLoading, setIsLoading] = useState(false)
-
+  const [oltList, setOltList] = useState<string[]>([])
+  const [error, setError] = useState<string | null>(null)
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
+  const fetchOltNames = async () => {
+    try {
+      setIsLoading(true)
+      const response = await axios.get('http://localhost:3001/olt/get_olt_names')
+      const {data} = response
+      setOltList(data.olt_names)
+      setIsLoading(false)
+    } catch (error) {
+      console.error('Error fetching OLT names:', error)
+    }
+  }
+  const configureVlan = async () => {
+    try {
+      if (!formData.olt_option || !formData.branch) {
+        showFor5seconds('Please select an OLT and enter a branch name.')
+        return
+      }
+      const response = await axios.post('http://localhost:3001/olt/configure_vlan', formData, {
+        headers: {
+          "Accept": 'application/json'
+        }
+      })
+      const {data} = response
+      console.log('VLAN configured successfully:', data)
+    } catch (error) {
+      console.error('Error configuring VLAN:', error)
+    }
+  }
+  const showFor5seconds = (msg: string) => {
+    setError(msg)
+    setTimeout(() => setError(null), 2000)
+  }
+  useEffect(() => { 
+    fetchOltNames()
+  }, [])
   return (
     <AuthGuard>
     <div className="font-sans grid grid-rows-[auto_1fr_auto] items-center justify-items-center min-h-screen p-6 sm:p-10 bg-gradient-to-br from-slate-50 via-white to-slate-100">
@@ -29,26 +69,29 @@ export default function Home() {
             <p className='mt-1 text-sm text-slate-500'>Set up your cluster details to get started.</p>
           </div>
           <div className='grid gap-y-3'>
-            <TextInput 
-              label="Cluster name"
-              name="input1"
-              type="text"
-              placeholder="Enter cluster name"
-              value={formData.input1}
-              onChange={handleInputChange}
+            <SelectInput
+              label="OLT Name"
+              options= {oltList.map(name => ({ label: name, value: name }))}
+              name="olt_option"
+              onChange={(e) => setFormData(prev => ({ ...prev, olt_option: e.target.value }))}
+              disabled={isLoading}
               required
             />
             <TextInput 
               label="Branch name"
-              name="input2"
+              name="branch"
               type="text"
               placeholder="Enter custom branch name"
-              value={formData.input2}
               onChange={handleInputChange}
               required
             />
           </div>
           <div className="pt-2">
+            {error && (
+              <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-3">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
             <button 
               type="submit"
               disabled={isLoading}
@@ -61,6 +104,9 @@ export default function Home() {
                 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-white
               `}
               aria-live="polite"
+              onClick={() => {
+                configureVlan()
+              }}
             >
               {isLoading ? (
                 <>

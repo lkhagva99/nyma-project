@@ -5,6 +5,7 @@ import { fpSqlitePlugin } from "fastify-sqlite-typed"
 import dotenv from 'dotenv'
 import authRoutes from './routes/auth.js'
 import cors from '@fastify/cors'
+import oltRoutes from './routes/olt.js'
 
 dotenv.config()
 const fastify = Fastify({ logger: false })
@@ -31,6 +32,7 @@ fastify.decorate("authenticate", async function (request, reply) {
 
 // Register routes
 fastify.register(authRoutes, { prefix: '/auth' })
+fastify.register(oltRoutes, { prefix: '/olt' })
 
 // Start server
 const start = async () => {
