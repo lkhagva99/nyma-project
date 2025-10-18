@@ -27,7 +27,7 @@ export async function isTokenValid(): Promise<boolean> {
   const token = getAuthTokenCookie();
   if (!token) return false;
   try {
-    const res = await axios.get("http://localhost:3001/auth/verify", {
+    const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND}/auth/verify`, {
       headers: { Authorization: `Bearer ${token}` },
       validateStatus: () => true,
     });

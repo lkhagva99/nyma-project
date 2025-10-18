@@ -75,7 +75,7 @@ export default function Register() {
     setErrors({})
 
     try {
-      const response = await axios.post('http://localhost:3001/auth/register', formData)
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND}/auth/register`, formData)
       const {data} = response
 
       if (response.status==200) {

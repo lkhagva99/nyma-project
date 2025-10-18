@@ -23,7 +23,7 @@ export default function Home() {
   const fetchOltNames = async () => {
     try {
       setIsLoading(true)
-      const response = await axios.get('http://localhost:3001/olt/get_olt_names')
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND}/olt/get_olt_names`)
       const {data} = response
       setOltList(data.olt_names)
       setIsLoading(false)
@@ -37,7 +37,7 @@ export default function Home() {
         showFor5seconds('Please select an OLT and enter a branch name.')
         return
       }
-      const response = await axios.post('http://localhost:3001/olt/configure_vlan', formData, {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND}/olt/configure_vlan`, formData, {
         headers: {
           "Accept": 'application/json'
         }

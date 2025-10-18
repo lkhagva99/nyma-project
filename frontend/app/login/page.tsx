@@ -66,7 +66,7 @@ export default function Login() {
     setErrors({})
 
     try {
-      const response = await axios.post('http://localhost:3001/auth/login', formData, {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND}/auth/login`, formData, {
         headers: {
           "Accept": 'application/json'
         }
