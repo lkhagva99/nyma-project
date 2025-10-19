@@ -22,19 +22,19 @@ export default async function oltRoutes(fastify, options) {
   });
 
   fastify.post("/configure_vlan", async (req, reply) => {
-    const { olt_name, vlan } = req.body;
+    const { olt_option: olt_name, vlan } = req.body;
     let router_ip = null;
     const eth_trunks = [];
 
     for (const [ip, details] of Object.entries(OLT_MAPPING)) {
       for (const [eth_trunk, olt] of Object.entries(details["Eth-Trunks"])) {
         if (olt_name === olt) {
+          console.log(ip)
           router_ip = ip;
           eth_trunks.push(eth_trunk);
         }
       }
     }
-
     if (!router_ip) {
       return reply.code(400).send({ message: "OLT not found!" });
     }
@@ -45,7 +45,6 @@ export default async function oltRoutes(fastify, options) {
       username: "nyamdorj",
       password: "Up!@#03220211",
     };
-
     const commands = [`vlan batch ${vlan}`];
     for (const eth_trunk of eth_trunks) {
       commands.push(`interface ${eth_trunk}`);
