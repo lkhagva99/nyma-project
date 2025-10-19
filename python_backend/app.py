@@ -10,7 +10,14 @@ from datetime import datetime, timedelta
 from functools import wraps
 
 app = Flask(__name__)
-CORS(app)
+# CORS(app, 
+#      origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # Add your frontend URLs
+#      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+#      allow_headers=["Content-Type", "Authorization", "Access-Control-Allow-Credentials"],
+#      supports_credentials=True)
+
+# Alternative: Allow all origins for development (uncomment if needed)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # JWT secret key
 app.config['JWT_SECRET'] = os.environ.get('JWT_SECRET', 'supersecret')
@@ -146,7 +153,7 @@ def verify_token(token_data):
 @app.route("/")
 def index():
     print("Is working")
-    return { message: "Is working"}
+    return jsonify({"message": "Is working"})
 
 # name suggestion
 @app.route("/olt/get_olt_names", methods=["GET"])
