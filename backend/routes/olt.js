@@ -50,8 +50,9 @@ export default async function oltRoutes(fastify, options) {
       commands.push(`interface ${eth_trunk}`);
       commands.push(`port trunk allow-pass vlan ${vlan}`);
     }
+    console.log(commands);
     try {
-      const output = await executeSSH(router, commands);
+      // const output = await executeSSH(router, commands);
       return {
         message: `VLAN ${vlan} added to ${eth_trunks} on ${router_ip}`,
         output,

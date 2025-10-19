@@ -9,13 +9,15 @@ import SelectInput from './components/SelectInput';
 export default function Home() {
   type FormData = {
     olt_option?: string;
-    branch?: string;
+    vlan?: string;
     [key: string]: any;
   };
   const [formData, setFormData] = useState<FormData>({});
   const [isLoading, setIsLoading] = useState(false)
   const [oltList, setOltList] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [submitDisabled, setSubmitDisabled] = useState(false)
+  const [toastMessage, setToastMessage] = useState<{message: string, type: 'success' | 'error'} | null>(null)
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
@@ -33,10 +35,16 @@ export default function Home() {
   }
   const configureVlan = async () => {
     try {
-      if (!formData.olt_option || !formData.branch) {
-        showFor5seconds('Please select an OLT and enter a branch name.')
+      if (!formData.olt_option || !formData.vlan) {
+        showFor5seconds('Please select an OLT and enter a vlan.')
         return
       }
+      
+      // Disable submit button for 3 seconds
+      setSubmitDisabled(true)
+      setTimeout(() => setSubmitDisabled(false), 3000)
+      
+      setIsLoading(true)
       const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND}/olt/configure_vlan`, formData, {
         headers: {
           "Accept": 'application/json'
@@ -44,13 +52,25 @@ export default function Home() {
       })
       const {data} = response
       console.log('VLAN configured successfully:', data)
+      
+      // Show success toast
+      showToast('VLAN configured successfully!', 'success')
     } catch (error) {
       console.error('Error configuring VLAN:', error)
+      // Show error toast
+      showToast('Error configuring VLAN. Please try again.', 'error')
+    } finally {
+      setIsLoading(false)
     }
   }
   const showFor5seconds = (msg: string) => {
     setError(msg)
     setTimeout(() => setError(null), 2000)
+  }
+  
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToastMessage({ message, type })
+    setTimeout(() => setToastMessage(null), 3000)
   }
   useEffect(() => { 
     fetchOltNames()
@@ -78,10 +98,10 @@ export default function Home() {
               required
             />
             <TextInput 
-              label="Branch name"
-              name="branch"
+              label="Vlan"
+              name="vlan"
               type="text"
-              placeholder="Enter custom branch name"
+              placeholder="Enter custom vlan name"
               onChange={handleInputChange}
               required
             />
@@ -92,12 +112,25 @@ export default function Home() {
                 <p className="text-sm text-red-600">{error}</p>
               </div>
             )}
+            {toastMessage && (
+              <div className={`mb-4 border rounded-md p-3 ${
+                toastMessage.type === 'success' 
+                  ? 'bg-green-50 border-green-200' 
+                  : 'bg-red-50 border-red-200'
+              }`}>
+                <p className={`text-sm ${
+                  toastMessage.type === 'success' 
+                    ? 'text-green-600' 
+                    : 'text-red-600'
+                }`}>{toastMessage.message}</p>
+              </div>
+            )}
             <button 
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || submitDisabled}
               className={`
                 inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 font-medium transition-all
-                ${isLoading 
+                ${(isLoading || submitDisabled)
                   ? 'bg-gray-300 text-gray-600 cursor-not-allowed' 
                   : 'bg-primary text-white hover:bg-secondary hover:shadow-lg active:scale-[0.99]'
                 }
@@ -115,6 +148,8 @@ export default function Home() {
                   </span>
                   Saving config...
                 </>
+              ) : submitDisabled ? (
+                'Please wait...'
               ) : (
                 'Save config'
               )}
