@@ -68,7 +68,7 @@ export default async function oltRoutes(fastify, options) {
 }
 
 // helper function
-function executeSSH(router, commands) {
+function executeSSHOLD(router, commands) {
   return new Promise((resolve, reject) => {
     const conn = new Client();
     let output = "";
@@ -94,5 +94,55 @@ function executeSSH(router, commands) {
       })
       .on("error", reject)
       .connect(router);
+  });
+}
+
+
+import { Client } from "ssh2";
+
+export async function executeSSH(router, commands) {
+  const conn = new Client();
+
+  const connectionConfig = {
+    host: router.host,
+    port: 22,
+    username: router.username,
+    password: router.password,
+    readyTimeout: 10000, // optional: 10s timeout for connection
+  };
+
+  return new Promise((resolve, reject) => {
+    let allOutput = "";
+
+    conn
+      .on("ready", async () => {
+        try {
+          for (const cmd of commands) {
+            const result = await execCommand(conn, cmd);
+            allOutput += `\n> ${cmd}\n${result}\n`;
+          }
+          conn.end();
+          resolve(allOutput.trim());
+        } catch (err) {
+          conn.end();
+          reject(err);
+        }
+      })
+      .on("error", reject)
+      .connect(connectionConfig);
+  });
+}
+
+function execCommand(conn, command) {
+  return new Promise((resolve, reject) => {
+    conn.exec(command, (err, stream) => {
+      if (err) return reject(err);
+
+      let output = "";
+      stream
+        .on("close", () => resolve(output))
+        .on("data", (data) => (output += data.toString()))
+        .stderr.on("data", (data) => (output += data.toString()));
+    });
   });
 }
