@@ -10,7 +10,7 @@ module.exports = {
         JWT_SECRET: "supersecretkey",
         PYTHONPATH: ".",
       },
-      cwd: "./python_backend",
+      cwd: "./",
     },
   ],
 };
