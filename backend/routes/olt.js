@@ -53,11 +53,13 @@ export default async function oltRoutes(fastify, options) {
     console.log(commands);
     try {
       const output = await executeSSH(router, commands);
+      console.log(output)
       return reply.code(200).send({
         message: `VLAN ${vlan} added to ${eth_trunks} on ${router_ip}`,
-        // output,
+        output,
       });
     } catch (err) {
+      console.log(err)
       return reply
         .code(500)
         .send({ message: "Error configuring VLAN", error: err.message });
