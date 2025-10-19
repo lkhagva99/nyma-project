@@ -194,7 +194,7 @@ def configure_vlan():
         "username": "nyamdorj",
         "password": "Up!@#03220211"
     }
-
+    console.log(router)
     # Vlan тохируулах хэсэг
     commands = [f"vlan batch {vlan}"]
     for eth_trunk in eth_trunks:
