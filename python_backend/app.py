@@ -176,13 +176,11 @@ def configure_vlan():
     # Зөв eth-trunk түүнд харялагдах IP address
     router_ip = None
     eth_trunks = []
-
     for ip, details in OLT_MAPPING.items():
         for eth_trunk, olt in details["Eth-Trunks"].items():
             if olt_name == olt:
                 router_ip = ip
                 eth_trunks.append(eth_trunk)
-
     # OLT олдохгүй үед
     if not router_ip:
         return jsonify({"message": "OLT not found!"}), 400
@@ -194,7 +192,7 @@ def configure_vlan():
         "username": "nyamdorj",
         "password": "Up!@#03220211"
     }
-    console.log(router)
+    print(router)
     # Vlan тохируулах хэсэг
     commands = [f"vlan batch {vlan}"]
     for eth_trunk in eth_trunks:
