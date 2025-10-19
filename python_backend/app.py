@@ -213,5 +213,6 @@ def configure_vlan():
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 3001))
-    print(port)
-    app.run(host="localhost", port=port)
+    host = os.environ.get('HOST', '0.0.0.0')  # Allow external connections
+    print(f"Starting server on {host}:{port}")
+    app.run(host=host, port=port)
