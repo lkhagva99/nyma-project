@@ -8,7 +8,7 @@ import SelectInput from './components/SelectInput';
 
 export default function Home() {
   type FormData = {
-    olt_option?: string;
+    olt_name?: string;
     vlan?: string;
     [key: string]: any;
   };
@@ -34,7 +34,7 @@ export default function Home() {
   }
   const configureVlan = async () => {
     try {
-      if (!formData.olt_option || !formData.vlan) {
+      if (!formData.olt_name || !formData.vlan) {
         showFor5seconds('Please select an OLT and enter a vlan.')
         return
       }
@@ -87,8 +87,8 @@ export default function Home() {
             <SelectInput
               label="OLT Name"
               options= {oltList.map(name => ({ label: name, value: name }))}
-              name="olt_option"
-              onChange={(e) => setFormData(prev => ({ ...prev, olt_option: e.target.value }))}
+              name="olt_name"
+              onChange={(e) => setFormData(prev => ({ ...prev, olt_name: e.target.value }))}
               disabled={isLoading}
               required
             />
