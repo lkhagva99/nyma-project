@@ -34,11 +34,48 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS olt_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            router_ip TEXT NOT NULL,
+            cluster TEXT NOT NULL,
+            eth_trunk TEXT NOT NULL,
+            name TEXT NOT NULL
+        )
+    ''')
     conn.commit()
     conn.close()
 
 # Initialize database
 init_db()
+
+# Migrate data from JSON to database
+def migrate_olt_data():
+    conn = sqlite3.connect('sqlite.db')
+    cursor = conn.cursor()
+    
+    # Check if data already exists
+    cursor.execute('SELECT COUNT(*) FROM olt_data')
+    existing_count = cursor.fetchone()[0]
+    
+    if existing_count == 0:
+        print('Migrating OLT data from JSON to database...')
+        
+        for ip, details in OLT_MAPPING.items():
+            cluster = details.get("Cluster", "")
+            for eth_trunk, name in details.get("Eth-Trunks", {}).items():
+                if name and name.strip():
+                    cursor.execute(
+                        'INSERT INTO olt_data (router_ip, cluster, eth_trunk, name) VALUES (?, ?, ?, ?)',
+                        (ip, cluster, eth_trunk, name)
+                    )
+        
+        conn.commit()
+        print('OLT data migration completed successfully')
+    
+    conn.close()
+
+# Run migration
 
 # JWT token validation decorator
 def token_required(f):
@@ -149,6 +186,12 @@ def verify_token(token_data):
         }
     })
 
+@app.route("/olt/migrate")
+def migrate_olts():
+    migrate_olt_data()
+    return jsonify({"message": "Migration completed successfully"})
+    
+
 # index.html zam
 @app.route("/")
 def index():
@@ -158,32 +201,51 @@ def index():
 # name suggestion
 @app.route("/olt/get_olt_names", methods=["GET"])
 def get_olt_names():
-    olt_names = set()  # Using a set to avoid duplicates
-    for details in OLT_MAPPING.values():
-        for olt in details["Eth-Trunks"].values():
-            if olt:  # Avoid empty values
-                olt_names.add(olt)
-
-    return jsonify({"olt_names": sorted(olt_names)})
+    conn = sqlite3.connect('sqlite.db')
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT id, name FROM olt_data WHERE name IS NOT NULL AND name != "" ORDER BY name')
+    olt_data = [{"id": row[0], "name": row[1]} for row in cursor.fetchall()]
+    
+    conn.close()
+    return jsonify({"olt_data": olt_data})
 
 #  VLAN configuratio handle hiih zamn
 @app.route("/olt/configure_vlan", methods=["POST"])
 def configure_vlan():
     data = request.json
-    olt_name = data.get("olt_name")
+    olt_id = data.get("olt_id")
+    olt_name = data.get("olt_name")  # Keep for backward compatibility
     vlan = data.get("vlan")
 
-    # Зөв eth-trunk түүнд харялагдах IP address
-    router_ip = None
-    eth_trunks = []
-    for ip, details in OLT_MAPPING.items():
-        for eth_trunk, olt in details["Eth-Trunks"].items():
-            if olt_name == olt:
-                router_ip = ip
-                eth_trunks.append(eth_trunk)
-    # OLT олдохгүй үед
-    if not router_ip:
+    # Query database for router IP and eth_trunks
+    conn = sqlite3.connect('sqlite.db')
+    cursor = conn.cursor()
+    
+    if olt_id:
+        # Use ID if provided
+        cursor.execute('''
+            SELECT router_ip, eth_trunk 
+            FROM olt_data 
+            WHERE id = ?
+        ''', (olt_id,))
+    else:
+        # Fallback to name for backward compatibility
+        cursor.execute('''
+            SELECT router_ip, eth_trunk 
+            FROM olt_data 
+            WHERE name = ?
+        ''', (olt_name,))
+    
+    results = cursor.fetchall()
+    conn.close()
+    
+    if not results:
         return jsonify({"message": "OLT not found!"}), 400
+    
+    # Get unique router IP and all eth_trunks
+    router_ip = results[0][0]  # All should have same router_ip for same olt_name
+    eth_trunks = [row[1] for row in results]
 
     # логин
     router = {

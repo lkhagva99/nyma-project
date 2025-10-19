@@ -7,14 +7,20 @@ import axios from 'axios';
 import SelectInput from './components/SelectInput';
 
 export default function Home() {
+  type OltData = {
+    id: number;
+    name: string;
+  };
+
   type FormData = {
-    olt_name?: string;
+    olt_id?: string;
+    olt_name?: string; // Keep for backward compatibility
     vlan?: string;
     [key: string]: any;
   };
   const [formData, setFormData] = useState<FormData>({});
   const [isLoading, setIsLoading] = useState(false)
-  const [oltList, setOltList] = useState<string[]>([])
+  const [oltList, setOltList] = useState<OltData[]>([])
   const [error, setError] = useState<string | null>(null)
   const [toastMessage, setToastMessage] = useState<{message: string, type: 'success' | 'error'} | null>(null)
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -26,7 +32,7 @@ export default function Home() {
       setIsLoading(true)
       const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND}/olt/get_olt_names`)
       const {data} = response
-      setOltList(data.olt_names)
+      setOltList(data.olt_data || [])
       setIsLoading(false)
     } catch (error) {
       console.error('Error fetching OLT names:', error)
@@ -34,7 +40,7 @@ export default function Home() {
   }
   const configureVlan = async () => {
     try {
-      if (!formData.olt_name || !formData.vlan) {
+      if (!formData.olt_id || !formData.vlan) {
         showFor5seconds('Please select an OLT and enter a vlan.')
         return
       }
@@ -86,9 +92,17 @@ export default function Home() {
           <div className='grid gap-y-3'>
             <SelectInput
               label="OLT Name"
-              options= {oltList.map(name => ({ label: name, value: name }))}
-              name="olt_name"
-              onChange={(e) => setFormData(prev => ({ ...prev, olt_name: e.target.value }))}
+              options= {oltList.map(olt => ({ label: olt.name, value: olt.id.toString() }))}
+              name="olt_id"
+              onChange={(e) => {
+                const selectedId = e.target.value;
+                const selectedOlt = oltList.find(olt => olt.id.toString() === selectedId);
+                setFormData(prev => ({ 
+                  ...prev, 
+                  olt_id: selectedId,
+                  olt_name: selectedOlt?.name // Keep for backward compatibility
+                }));
+              }}
               disabled={isLoading}
               required
             />

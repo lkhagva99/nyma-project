@@ -1,10 +1,4 @@
-import { readFileSync } from "fs";
-import { join } from "path";
 import { Client } from "ssh2";
-
-const OLT_MAPPING = JSON.parse(
-  readFileSync(join(process.cwd(), "./utils/olt_data.json"), "utf-8")
-);
 
 export default async function oltRoutes(fastify, options) {
   fastify.get("/", async (req, reply) => {
@@ -12,32 +6,38 @@ export default async function oltRoutes(fastify, options) {
   });
 
   fastify.get("/get_olt_names", async (req, reply) => {
-    const oltNames = new Set();
-    for (const details of Object.values(OLT_MAPPING)) {
-      for (const olt of Object.values(details["Eth-Trunks"])) {
-        if (olt) oltNames.add(olt);
-      }
-    }
-    return { olt_names: Array.from(oltNames).sort() };
+    const oltData = await fastify.db.all(
+      'SELECT id, name FROM olt_data WHERE name IS NOT NULL AND name != "" ORDER BY name'
+    );
+    return { olt_data: oltData };
   });
 
   fastify.post("/configure_vlan", async (req, reply) => {
-    const { olt_option: olt_name, vlan } = req.body;
-    let router_ip = null;
-    const eth_trunks = [];
-
-    for (const [ip, details] of Object.entries(OLT_MAPPING)) {
-      for (const [eth_trunk, olt] of Object.entries(details["Eth-Trunks"])) {
-        if (olt_name === olt) {
-          console.log(ip)
-          router_ip = ip;
-          eth_trunks.push(eth_trunk);
-        }
-      }
+    const { olt_option: olt_name, olt_id, vlan } = req.body;
+    
+    // Query database for router IP and eth_trunks
+    let results;
+    if (olt_id) {
+      // Use ID if provided
+      results = await fastify.db.all(
+        'SELECT router_ip, eth_trunk FROM olt_data WHERE id = ?',
+        [olt_id]
+      );
+    } else {
+      // Fallback to name for backward compatibility
+      results = await fastify.db.all(
+        'SELECT router_ip, eth_trunk FROM olt_data WHERE name = ?',
+        [olt_name]
+      );
     }
-    if (!router_ip) {
+    
+    if (!results || results.length === 0) {
       return reply.code(400).send({ message: "OLT not found!" });
     }
+    
+    // Get unique router IP and all eth_trunks
+    const router_ip = results[0].router_ip;
+    const eth_trunks = results.map(row => row.eth_trunk);
 
     const router = {
       device_type: "huawei_vrp",
