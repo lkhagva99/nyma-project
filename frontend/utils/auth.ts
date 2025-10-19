@@ -7,20 +7,23 @@ const TOKEN_COOKIE_NAME = "token";
 
 export function setAuthTokenCookie(token: string) {
   // Set for 1 hour to align with backend expiry
-  Cookies.set(TOKEN_COOKIE_NAME, token, {
-    expires: 1 / 24, // 1 hour
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-  });
+  // Cookies.set(TOKEN_COOKIE_NAME, token, {
+  //   expires: 1 / 24, // 1 hour
+  //   secure: process.env.NODE_ENV === "production",
+  //   sameSite: "lax",
+  //   path: "/",
+  // });
+  localStorage.setItem(TOKEN_COOKIE_NAME, token);
 }
 
 export function getAuthTokenCookie(): string | undefined {
-  return Cookies.get(TOKEN_COOKIE_NAME);
+  return localStorage.getItem(TOKEN_COOKIE_NAME) || undefined;
+  // return Cookies.get(TOKEN_COOKIE_NAME);
 }
 
 export function clearAuthTokenCookie() {
-  Cookies.remove(TOKEN_COOKIE_NAME, { path: "/" });
+  localStorage.removeItem(TOKEN_COOKIE_NAME);
+  // Cookies.remove(TOKEN_COOKIE_NAME, { path: "/" });
 }
 
 export async function isTokenValid(): Promise<boolean> {
