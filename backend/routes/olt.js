@@ -98,8 +98,6 @@ function executeSSHOLD(router, commands) {
 }
 
 
-import { Client } from "ssh2";
-
 export async function executeSSH(router, commands) {
   const conn = new Client();
 
