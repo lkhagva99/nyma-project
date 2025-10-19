@@ -3,7 +3,7 @@ module.exports = {
     {
       name: "python-backend",
       script: "app.py",
-      interpreter: "python3",
+      interpreter: "/usr/bin/python3",
       env: {
         PORT: 3001,
         HOST: "0.0.0.0",
