@@ -145,7 +145,8 @@ def verify_token(token_data):
 # index.html zam
 @app.route("/")
 def index():
-    return render_template("index.html")
+    print("Is working")
+    return { message: "Is working"}
 
 # name suggestion
 @app.route("/olt/get_olt_names", methods=["GET"])
