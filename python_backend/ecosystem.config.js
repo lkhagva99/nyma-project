@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: "python-backend",
-      script: "python",
+      script: "python3",
       args: "app.py",
       interpreter: "none",
       env: {
