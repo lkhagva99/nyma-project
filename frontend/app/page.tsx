@@ -16,7 +16,6 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false)
   const [oltList, setOltList] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
-  const [submitDisabled, setSubmitDisabled] = useState(false)
   const [toastMessage, setToastMessage] = useState<{message: string, type: 'success' | 'error'} | null>(null)
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -39,10 +38,6 @@ export default function Home() {
         showFor5seconds('Please select an OLT and enter a vlan.')
         return
       }
-      
-      // Disable submit button for 3 seconds
-      setSubmitDisabled(true)
-      setTimeout(() => setSubmitDisabled(false), 3000)
       
       setIsLoading(true)
       const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND}/olt/configure_vlan`, formData, {
@@ -127,10 +122,10 @@ export default function Home() {
             )}
             <button 
               type="submit"
-              disabled={isLoading || submitDisabled}
+              disabled={isLoading}
               className={`
                 inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 font-medium transition-all
-                ${(isLoading || submitDisabled)
+                ${isLoading
                   ? 'bg-gray-300 text-gray-600 cursor-not-allowed' 
                   : 'bg-primary text-white hover:bg-secondary hover:shadow-lg active:scale-[0.99]'
                 }
@@ -148,8 +143,6 @@ export default function Home() {
                   </span>
                   Saving config...
                 </>
-              ) : submitDisabled ? (
-                'Please wait...'
               ) : (
                 'Save config'
               )}
